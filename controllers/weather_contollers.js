@@ -3,7 +3,7 @@ import { Weather } from "../models/weather_models.js"
 
 
 const API_KEY = process.env.WEATHER_API_KEY;
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
+const BASE_URL = ' http://api.weatherapi.com/v1/current.json';
 
 const normalizeCity = city => city.trim().toLowerCase();
 
