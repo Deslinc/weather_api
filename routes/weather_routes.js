@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getWeather, getWeatherByCityParam } from "../controllers/weather_contollers.js";
+import { getWeather, getCityWeather } from "../controllers/weather_contollers.js";
 
 export const WeatherRouter = Router()
 
@@ -7,4 +7,4 @@ export const WeatherRouter = Router()
 WeatherRouter.get('/', getWeather)
 
 // GET /weather/:city
-WeatherRouter.get('/:city', getWeatherByCityParam)
+WeatherRouter.get('/:city', getCityWeather)

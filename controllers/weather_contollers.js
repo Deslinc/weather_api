@@ -2,56 +2,58 @@ import axios from "axios"
 import { Weather } from "../models/weather_models.js"
 
 
-const API_KEY = process.env.WEATHER_API_KEY;
-const BASE_URL = ' http://api.weatherapi.com/v1/current.json';
+const normalizeCity = (city) => city.trim().toLowerCase();
 
-const normalizeCity = city => city.trim().toLowerCase();
+const getWeatherFromAPI = async (city) => {
+    const { WEATHER_API_KEY, BASE_URL } = process.env;
+
+
+    const response = await axios.get(BASE_URL, {
+        params: {
+            key: WEATHER_API_KEY,
+            q: city,
+        }
+    });
+    return response.data;
+};
 
 export const getWeather = async (req, res) => {
-    const cityParam = req.query.city;
-    if (!cityParam) return res.status(400).json({ error: "city name must be provided" });
-    const city = normalizeCity(cityParam);
+    const city = normalizeCity(req.query.city);
+
+    if (!city) return res.status(400).json({ error: 'City is required' });
 
     try {
         let weather = await Weather.findOne({ city });
 
         if (weather) {
-            return res.json({ source: 'database', data: weather });
+            return res.json({ source: 'my database', data: weather });
         }
-        // fetching data from external API
-        const response = await axios.get(BASE_URL, {
-            params: {
-                q: city,
-                appid: API_KEY,
-                units: 'metric'
 
-            }
-        });
+        const apiData = await getWeatherFromAPI(city);
 
-        const data = response.data;
         const newWeather = new Weather({
             city,
-            temperature: data.main.temp,
-            description: data.weather[0].description
+            temperature: apiData.current.temp_c,
+            weatherDescription: apiData.current.condition.text,
+            timestamp: new Date(apiData.current.last_updated)
         });
 
         await newWeather.save();
-        return res.json({ source: 'api', data: newWeather });
+        res.json({ source: 'External api', data: newWeather });
     } catch (error) {
-        return res.status(500).json({ error: 'Failed to fetch weather data' });
+        console.error('Fetch error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to fetch weather data' });
     }
 };
 
-export const getWeatherByCityParam = async (req, res) => {
+export const getCityWeather = async (req, res) => {
     const city = normalizeCity(req.params.city);
 
     try {
         const weather = await Weather.findOne({ city });
         if (!weather) return res.status(404).json({ error: 'City not found' });
-
         res.json(weather);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
-
-}; 
+};
