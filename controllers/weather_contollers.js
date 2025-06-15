@@ -20,7 +20,7 @@ const getWeatherFromAPI = async (city) => {
 export const getWeather = async (req, res) => {
     const city = normalizeCity(req.query.city);
 
-    if (!city) return res.status(400).json({ error: 'City is required' });
+    if (!city) return res.status(400).json({ error: 'City name must be provided' });
 
     try {
         let weather = await Weather.findOne({ city });
@@ -42,16 +42,17 @@ export const getWeather = async (req, res) => {
         res.json({ source: 'External api', data: newWeather });
     } catch (error) {
         console.error('Fetch error:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Failed to fetch weather data' });
+        res.status(500).json({ error: 'Cannot fetch weather information' });
     }
 };
+// fetching weather information from database
 
 export const getCityWeather = async (req, res) => {
     const city = normalizeCity(req.params.city);
 
     try {
         const weather = await Weather.findOne({ city });
-        if (!weather) return res.status(404).json({ error: 'City not found' });
+        if (!weather) return res.status(404).json({ error: 'City cannot be found in our database' });
         res.json(weather);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
